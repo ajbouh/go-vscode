@@ -135,7 +135,7 @@ func (wb *Workbench) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.FileServerFS(fsys).ServeHTTP(w, r)
+		http.StripPrefix(wb.Prefix, http.FileServerFS(fsys)).ServeHTTP(w, r)
 	}))
 	mux.ServeHTTP(w, r)
 }
