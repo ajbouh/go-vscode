@@ -9,7 +9,7 @@ const extensionReady = new Promise((resolve) => {
 });
 
 const websocketReady = new Promise((resolve) => {
-    const ws = new WebSocket(`//${location.host}/${new URL('bridge', document.baseURI).pathname}`)
+    const ws = new WebSocket(`//${location.host}${new URL('bridge', document.baseURI).pathname}`)
     ws.onopen = (e) => {
         resolve(ws);
     };
