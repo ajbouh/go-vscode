@@ -51,7 +51,7 @@ type Workbench struct {
 	AdditionalBuiltinExtensions []URIComponents       `json:"additionalBuiltinExtensions,omitempty"`
 	FolderURI                   *URIComponents        `json:"folderUri,omitempty"`
 
-	Prefix string
+	Prefix string `json:"-"`
 
 	FS      fs.FS                              `json:"-"`
 	MakePTY func() (io.ReadWriteCloser, error) `json:"-"`

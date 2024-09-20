@@ -8,7 +8,7 @@
 		<meta name="mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-title" content="Code">
-		<link rel="apple-touch-icon" href="/vscode/code-192.png" />
+		<link rel="apple-touch-icon" href="vscode/code-192.png" />
 
 		<!-- Disable pinch zooming -->
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
@@ -44,10 +44,10 @@
 	<script src="vscode/out/vs/webPackagePaths.js"></script>
 	<script>
 		Object.keys(self.webPackagePaths).map(function (key, index) {
-			self.webPackagePaths[key] = `${window.location.origin}/vscode/modules/${key}/${self.webPackagePaths[key]}`;
+			self.webPackagePaths[key] = `${document.baseURI}vscode/modules/${key}/${self.webPackagePaths[key]}`;
 		});
 		require.config({
-			baseUrl: `${window.location.origin}/vscode/out`,
+			baseUrl: `${document.baseURI}vscode/out`,
 			recordStats: true,
 			trustedTypesPolicy: window.trustedTypes?.createPolicy('amdLoader', {
 				createScriptURL(value) {
