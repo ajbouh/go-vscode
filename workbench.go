@@ -52,6 +52,7 @@ type Workbench struct {
 	FolderURI                   *URIComponents        `json:"folderUri,omitempty"`
 
 	Prefix string `json:"-"`
+	Scheme string `json:"-"`
 
 	FS      fs.FS                              `json:"-"`
 	MakePTY func() (io.ReadWriteCloser, error) `json:"-"`
@@ -70,7 +71,10 @@ func (wb *Workbench) ensureExtension(r *http.Request) {
 		}
 	}
 	if !foundExtension {
-		scheme := "http"
+		scheme := wb.Scheme
+		if scheme == "" {
+			scheme = "http"
+		}
 		if r.TLS != nil {
 			scheme = "https"
 		}
