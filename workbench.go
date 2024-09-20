@@ -114,7 +114,7 @@ func (wb *Workbench) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fsys := workingpathfs.New(zipfs.New(vscodeReader), "dist")
 	mux := http.NewServeMux()
 	mux.Handle(wb.Prefix+"/bridge", websocket.Handler(wb.handleBridge))
-	mux.Handle(wb.Prefix+"/extension/", http.FileServerFS(embedded))
+	mux.Handle(wb.Prefix+"/extension/", http.StripPrefix(wb.Prefix, http.FileServerFS(embedded)))
 	mux.Handle(wb.Prefix+"/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == wb.Prefix+"/" {
 			if wb.Prefix != "" {
