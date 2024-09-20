@@ -114,7 +114,7 @@ func (wb *Workbench) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux.Handle(wb.Prefix+"/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == wb.Prefix+"/" {
 			if wb.Prefix != "" {
-				serveFileReplacingBasePathHandler(embedded, wb.Prefix, "assets/index.html").ServeHTTP(w, r)
+				serveFileReplacingBasePathHandler(embedded, wb.Prefix+"/", "assets/index.html").ServeHTTP(w, r)
 				return
 			}
 			http.ServeFileFS(w, r, embedded, "assets/index.html")
