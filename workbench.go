@@ -144,7 +144,6 @@ func serveFileReplacingBasePathHandler(dir fs.FS, basePath, path string) http.Ha
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		content, err := fs.ReadFile(dir, path)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
