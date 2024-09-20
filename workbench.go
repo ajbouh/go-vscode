@@ -50,6 +50,8 @@ type Workbench struct {
 	AdditionalBuiltinExtensions []URIComponents       `json:"additionalBuiltinExtensions,omitempty"`
 	FolderURI                   *URIComponents        `json:"folderUri,omitempty"`
 
+	Prefix string
+
 	FS      fs.FS                              `json:"-"`
 	MakePTY func() (io.ReadWriteCloser, error) `json:"-"`
 }
@@ -61,7 +63,7 @@ type bridge struct {
 func (wb *Workbench) ensureExtension(r *http.Request) {
 	foundExtension := false
 	for _, e := range wb.AdditionalBuiltinExtensions {
-		if e.Path == "/extension" {
+		if e.Path == wb.Prefix+"/extension" {
 			foundExtension = true
 			break
 		}
@@ -74,7 +76,7 @@ func (wb *Workbench) ensureExtension(r *http.Request) {
 		wb.AdditionalBuiltinExtensions = append(wb.AdditionalBuiltinExtensions, URIComponents{
 			Scheme:    scheme,
 			Authority: r.Host,
-			Path:      "/extension",
+			Path:      wb.Prefix+"/extension",
 		})
 	}
 }
@@ -106,20 +108,24 @@ func (wb *Workbench) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	fsys := workingpathfs.New(zipfs.New(vscodeReader), "dist")
 	mux := http.NewServeMux()
-	mux.Handle("/bridge", websocket.Handler(wb.handleBridge))
-	mux.Handle("/extension/", http.FileServerFS(embedded))
-	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
+	mux.Handle(wb.Prefix+"/bridge", websocket.Handler(wb.handleBridge))
+	mux.Handle(wb.Prefix+"/extension/", http.FileServerFS(embedded))
+	mux.Handle(wb.Prefix+"/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == wb.Prefix+"/" {
+			if wb.Prefix != "" {
+				serveFileReplacingBasePathHandler(embedded, wb.Prefix, "assets/index.html").ServeHTTP(w, r)
+				return
+			}
 			http.ServeFileFS(w, r, embedded, "assets/index.html")
 			return
 		}
 
-		if r.URL.Path == "/bridge.js" {
+		if r.URL.Path == wb.Prefix+"/bridge.js" {
 			http.ServeFileFS(w, r, embedded, "assets/bridge.js")
 			return
 		}
 
-		if r.URL.Path == "/workbench.json" {
+		if r.URL.Path == wb.Prefix+"/workbench.json" {
 			w.Header().Add("content-type", "application/json")
 			enc := json.NewEncoder(w)
 			if err := enc.Encode(wb); err != nil {
@@ -131,4 +137,21 @@ func (wb *Workbench) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.FileServerFS(fsys).ServeHTTP(w, r)
 	}))
 	mux.ServeHTTP(w, r)
+}
+
+func serveFileReplacingBasePathHandler(dir fs.FS, basePath, path string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		content, err := fs.ReadFile(dir, path)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		content = bytes.Replace(content,
+			[]byte("<head>"),
+			[]byte(`<head><base href="`+basePath+`">`),
+			1)
+		b := bytes.NewReader(content)
+		http.ServeContent(w, r, path, time.Now(), b)
+	})
 }
