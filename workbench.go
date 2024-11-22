@@ -51,6 +51,7 @@ type Workbench struct {
 	AdditionalBuiltinExtensions []URIComponents       `json:"additionalBuiltinExtensions,omitempty"`
 	FolderURI                   *URIComponents        `json:"folderUri,omitempty"`
 
+	Host   string `json:"-"`
 	Prefix string `json:"-"`
 	Scheme string `json:"-"`
 
@@ -78,9 +79,13 @@ func (wb *Workbench) ensureExtension(r *http.Request) {
 		if r.TLS != nil {
 			scheme = "https"
 		}
+		host := wb.Host
+		if host == "" {
+			host = r.Host
+		}
 		wb.AdditionalBuiltinExtensions = append(wb.AdditionalBuiltinExtensions, URIComponents{
 			Scheme:    scheme,
-			Authority: r.Host,
+			Authority: host,
 			Path:      wb.Prefix+"/extension",
 		})
 	}
